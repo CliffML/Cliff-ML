@@ -20,7 +20,47 @@ import java.util.logging.Logger;
  * @author Asus
  */
 public class ServerGomoku {
-
+    
+    private static ArrayList<ConnectionHandler> clientList = new ArrayList<>();
+    private static class ConnectionHandler implements Runnable {
+        Socket socket = null;
+        
+        public ConnectionHandler(Socket sock) {
+            socket = sock;
+        }
+        
+        public void write(String line) {
+            try {
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                out.println(line);
+            } catch (IOException ex) {
+                Logger.getLogger(ServerGomoku.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        @Override
+        public void run() {
+            try {
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(socket.getInputStream()));
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    sendToAll(inputLine);
+                    System.out.println(inputLine);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ServerGomoku.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+    }
+    
+    public static void sendToAll(String line) {
+        clientList.stream().forEach((client) -> {
+            client.write(line);
+        });
+    }
+    
     /**
      * @param args the command line arguments
      */
@@ -32,16 +72,13 @@ public class ServerGomoku {
         int portNum = Integer.parseInt(args[0]);
         try {
             ServerSocket servSock = new ServerSocket(portNum);
-            Socket clientSock = servSock.accept();
-            PrintWriter out =
-                new PrintWriter(clientSock.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(
-                new InputStreamReader(clientSock.getInputStream()));
-            
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                out.println(inputLine);
+            for (;;) {
+                Socket clientSock = servSock.accept();
+                ConnectionHandler connectionHandler = new ConnectionHandler(clientSock);
+                clientList.add(connectionHandler);
+                new Thread(connectionHandler).start();
             }
+            
         } catch (IOException ex) {
             Logger.getLogger(ServerGomoku.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -18,7 +18,29 @@ import java.util.logging.Logger;
  * @author Asus
  */
 public class ClientGomoku {
-
+    
+    private static class ServerListener implements Runnable {
+        Socket socket = null;
+        BufferedReader in = null;
+        public ServerListener(Socket sock, BufferedReader input) {
+            socket = sock;
+            in = input;
+        }
+        
+        @Override
+        public void run() {
+            try {
+                String input;
+                while ((input = in.readLine()) != null) {
+                    System.out.println("Received : "+input);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ClientGomoku.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+    }
+    
     /**
      * @param args the command line arguments
      */
@@ -37,10 +59,13 @@ public class ClientGomoku {
             BufferedReader in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
             
+            ServerListener listener = new ServerListener(sock, in);
+            new Thread(listener).start();
+            
             String userInput;
             while ((userInput = stdIn.readLine()) != null) {
                 out.println(userInput);
-                System.out.println("echo: " + in.readLine());
+                System.out.println("echo: " + userInput);
             }
         } catch (IOException ex) {
             Logger.getLogger(ClientGomoku.class.getName()).log(Level.SEVERE, null, ex);
