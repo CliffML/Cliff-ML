@@ -17,8 +17,7 @@ import java.util.logging.Logger;
  *
  * @author Asus
  */
-public class ClientGomoku {
-    
+public class ClientGomoku {    
     private static class ServerListener implements Runnable {
         Socket socket = null;
         BufferedReader in = null;

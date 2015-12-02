@@ -20,15 +20,73 @@ import java.util.logging.Logger;
  * @author Asus
  */
 public class ServerGomoku {
-    
+    private static ArrayList<Room> roomList = new ArrayList<>();
+    private static ArrayList<User> users = new ArrayList<>();
     private static ArrayList<ConnectionHandler> clientList = new ArrayList<>();
+    private static int counter = 0;
+    
     private static class ConnectionHandler implements Runnable {
-        Socket socket = null;
+        private int clientNo;
+        private Socket socket = null;
         
         public ConnectionHandler(Socket sock) {
             socket = sock;
+            clientNo = counter;
+            System.out.println(clientNo);
         }
         
+        public String parseCommand(String line) {
+            Scanner s = new Scanner(line);
+            String command = null;
+            String ret = null;
+            
+            command = s.next();
+            if (command.compareToIgnoreCase("create_room") == 0) {
+                roomList.add(new Room(s.next()));
+                write("Created room " + roomList.get(roomList.size()-1).getName());
+                System.out.println("Created room " + roomList.get(roomList.size()-1).getName());;
+            }
+            else if (command.compareToIgnoreCase("join_room") == 0) {
+                User user = users.get(Integer.parseInt(s.next()));
+                int roomID = Integer.parseInt(s.next());
+                roomList.get(roomID).addUser(user);
+                write("User " + user.getNick() + " joined room #" + roomID + " : " + roomList.get(roomID).getName());
+                System.out.println("User " + user.getNick() + " joined room #" + roomID);
+            }
+            else if (command.compareToIgnoreCase("create_user") == 0) {
+                users.add(new User(s.next(), clientNo));
+                write("Created user " + users.get(users.size()-1).getNick());
+                System.out.println("Created user " + users.get(users.size()-1).getNick());
+                //write("clientNo "+Integer.toString(users.size()-1)); //assign clientNo
+                //System.out.println("clientNo "+Integer.toString(users.size()-1));
+            }
+            else if (command.compareToIgnoreCase("chat") == 0) {
+                String msg;
+                int id = clientNo;
+                int i;
+                User user = null;
+                i = 0;
+                while (i < users.size() && id != users.get(i).getUserID())
+                    i++;
+                user = users.get(i);
+                msg = user.getNick() + ":";
+                while (s.hasNext()) {
+                    msg += s.nextLine();
+                }
+                i = 0;
+                while (i < roomList.size() && !roomList.get(i).getUsers().contains(user)) {
+                    i++;
+                }
+                for (int j=0; j<roomList.get(i).getNUser(); j++) {
+                    sendToSpecific(msg, roomList.get(i).userList.get(j).getUserID());
+                }
+            }
+            else {
+                write("No such command");
+                //System.out.println("No such command");
+            }
+            return ret;
+        }
         public void write(String line) {
             try {
                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -45,7 +103,9 @@ public class ServerGomoku {
                         new InputStreamReader(socket.getInputStream()));
                 String inputLine;
                 while ((inputLine = in.readLine()) != null) {
-                    sendToAll(inputLine);
+                    String line = parseCommand(inputLine);
+                    if (line != null)
+                        sendToAll(line);
                     System.out.println(inputLine);
                 }
             } catch (IOException ex) {
@@ -55,10 +115,67 @@ public class ServerGomoku {
         
     }
     
+    private static class Room {
+        private ArrayList<User> userList = new ArrayList<>();
+        private String name;
+        
+        public Room(String name) {
+            this.name = name;
+        }
+        public void addUser(User user) {
+            userList.add(user);
+        }
+        public int getNUser() {
+            return userList.size();
+        }
+        public String getName() {
+            return name;
+        }
+        public ArrayList<User> getUsers() {
+            return userList;
+        }
+        
+    }
+    
+    private static class User {
+        private String nickname;
+        private int score;
+        private int userID;
+        
+        public User(String nick, int ID) {
+            nickname = nick;
+            score = 0;
+            userID = ID;
+        }
+        public String getNick() {
+            return nickname;
+        }
+        public int getScore() {
+            return score;
+        }
+        public int getUserID() {
+            return userID;
+        }
+        public void addScore(int x) {
+            score += x;
+        }
+        public void setUserID(int x) {
+            userID = x;
+        }
+    }
+    
     public static void sendToAll(String line) {
         clientList.stream().forEach((client) -> {
             client.write(line);
         });
+    }
+    
+    public static void sendToSpecific(String line, int x) {
+        int i = 0;
+        while (i < clientList.size() && i != x) {
+            i++;
+        }
+        clientList.get(i).write(line);
     }
     
     /**
@@ -77,6 +194,7 @@ public class ServerGomoku {
                 ConnectionHandler connectionHandler = new ConnectionHandler(clientSock);
                 clientList.add(connectionHandler);
                 new Thread(connectionHandler).start();
+                counter++;
             }
             
         } catch (IOException ex) {
