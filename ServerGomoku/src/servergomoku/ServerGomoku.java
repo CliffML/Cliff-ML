@@ -13,6 +13,7 @@ import java.net.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import clientgomoku.GameBoard;
 
 /**
  *
@@ -27,11 +28,62 @@ public class ServerGomoku {
     private static class ConnectionHandler implements Runnable {
         private int clientNo;
         private Socket socket = null;
+        private GameBoard theBoard;
         
         public ConnectionHandler(Socket sock) {
             socket = sock;
             clientNo = counter;
             System.out.println(clientNo);
+            theBoard = new GameBoard(20, 20, 99);
+        }
+        
+        /* check if the game is over */
+        public boolean endGame(int x, int y)
+        {
+            int count, color;
+            int tx, ty;
+
+            // See whether the move just made at x,y has won.
+            // We need to see if we now have five-in-a-row.
+            color = theBoard.pieceAt(x,y);
+
+            // check horizontal first
+            tx = x; ty = y;
+            while ((tx>0) && (theBoard.pieceAt(tx-1,ty)==color))
+                    tx--;
+            count = 1;
+            while ((tx < theBoard.cols-1) && (theBoard.pieceAt(tx+1,ty)==color))
+            {
+                    count++;
+                    tx++;
+            }
+            //display("horiz count="+count);
+            if (count >= 5)
+                    return true;
+
+            // then do the three counts with vertical components
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                    tx = x; ty = y;
+                    while ((ty>0) && ((tx-dx)>=0) && ((tx-dx)<theBoard.cols)
+                                    && (theBoard.pieceAt(tx-dx,ty-1)==color))
+                    {
+                            tx-=dx;
+                            ty--;
+                    }
+                    count = 1;
+                    while ((ty<theBoard.rows-1) && ((tx+dx)>=0) && ((tx+dx)<theBoard.cols)
+                                    && (theBoard.pieceAt(tx+dx,ty+1)==color))
+                    {
+                            count++;
+                            tx+=dx;
+                            ty++;
+                    }
+                    //display("count (dx="+dx+")="+count);
+                    if (count >= 5)
+                            return true;
+            }
+            return false;
         }
         
         public String parseCommand(String line) {
@@ -56,10 +108,22 @@ public class ServerGomoku {
                 users.add(new User(s.next(), clientNo));
                 write("Created user " + users.get(users.size()-1).getNick());
                 System.out.println("Created user " + users.get(users.size()-1).getNick());
-                //write("clientNo "+Integer.toString(users.size()-1)); //assign clientNo
-                //System.out.println("clientNo "+Integer.toString(users.size()-1));
             }
             else if (command.compareToIgnoreCase("getroomname") == 0) {
+                int id = clientNo;
+                int i;
+                User user = null;
+                i = 0;
+                while (i < users.size() && id != users.get(i).getUserID())
+                    i++;
+                user = users.get(i);
+                i = 0;
+                while (i < roomList.size() && !roomList.get(i).getUsers().contains(user)) {
+                    i++;
+                }
+                write(roomList.get(i).getName());
+            }
+            else if (command.compareToIgnoreCase("getusers") == 0) {
                 int i = Integer.parseInt(s.next());
                 write(roomList.get(i).getName());
                 System.out.println("Created user " + users.get(users.size()-1).getNick());
@@ -79,6 +143,7 @@ public class ServerGomoku {
                     i++;
                 }
                 sendToSpecific("canMove", roomList.get(i).getUsers().get(0).getUserID());
+                sendToAll("turn " + roomList.get(i).getUsers().get((roomList.get(i).getUsers().indexOf(user) + 1)%roomList.get(i).getNUser()).getNick());
             }
             else if (command.compareToIgnoreCase("move") == 0) {
                 int x = Integer.parseInt(s.next());
@@ -96,10 +161,19 @@ public class ServerGomoku {
                 }
                 String str = Integer.toString(x) + " " + Integer.toString(y) + " " + Integer.toString(roomList.get(i).getUsers().indexOf(user));
                 sendToAll(str);
+                theBoard.addPiece(x, y, roomList.get(i).getUsers().indexOf(user) + 1);
                 int nextTurn = (roomList.get(i).getUsers().indexOf(user) + 1)%roomList.get(i).getNUser();
-                System.out.println(nextTurn);
-                System.out.println("UserID : " + roomList.get(i).getUsers().get(nextTurn).getUserID());
-                sendToSpecific("canMove", roomList.get(i).getUsers().get(nextTurn).getUserID());
+                if (endGame(x, y)) {
+                    //Menentukan siapa pemenang
+                    write("win");
+                    sendToAll("winner " + user.getNick());
+                }
+                else {
+                    //System.out.println(nextTurn);
+                    //System.out.println("UserID : " + roomList.get(i).getUsers().get(nextTurn).getUserID());
+                    sendToSpecific("canMove", roomList.get(i).getUsers().get(nextTurn).getUserID());
+                    sendToAll("turn " + roomList.get(i).getUsers().get(nextTurn).getNick());
+                }
             }
             else if (command.compareToIgnoreCase("chat") == 0) {
                 String msg;

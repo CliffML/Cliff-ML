@@ -36,6 +36,7 @@ public class ClientGomoku extends Applet implements Runnable {
 
     /* the GUI stuff */
     TextArea dispA;
+    TextArea dispB;
     Panel inputPanel;
 
     /* the Thread */
@@ -57,7 +58,8 @@ public class ClientGomoku extends Applet implements Runnable {
 	setLayout( new BorderLayout() );
 	inputPanel = new Panel();
 	inputPanel.setLayout( new BorderLayout() );
-	inputPanel.add("Center", dispA=new TextArea(5, 35));
+	inputPanel.add("North", dispA=new TextArea(5, 35));
+        inputPanel.add("Center", dispB=new TextArea(1, 15));
 	add("South", inputPanel);
 
 	addMouseListener(new mseL());
@@ -89,6 +91,7 @@ public class ClientGomoku extends Applet implements Runnable {
             Logger.getLogger(ClientGomoku.class.getName()).log(Level.SEVERE, null, ex);
         }
         /* start a new game */
+        resize(600, 600);
 	initBoard();
     }
 
@@ -130,6 +133,25 @@ public class ClientGomoku extends Applet implements Runnable {
                             if (input.equals("canMove")) {
                                 canMove = true;
                                 System.out.println("true canmove");
+                                display("Giliran Anda");
+                                input = in.readLine();
+                            }
+                            else if (input.equals("win")) {
+                                display("Anda menang");
+                                stop();
+                            }
+                            else if (input.contains("winner")) {
+                                s = new Scanner(input);
+                                String temp = s.next();
+                                temp = s.next();
+                                display(temp + " adalah pemenangnya!");
+                                stop();
+                            }
+                            else if (input.contains("turn")) {
+                                s = new Scanner(input);
+                                String temp = s.next();
+                                temp = s.next();
+                                display("Giliran " + temp);
                             }
                             else {
                                 s = new Scanner(input);
@@ -138,7 +160,6 @@ public class ClientGomoku extends Applet implements Runnable {
                                 int turn = s.nextInt()+1;
                                 System.out.println(x + " " + y + " " + turn);
                                 doMove(x, y, turn);
-                                System.out.println("asf");
                                 repaint();
                             }
                     } catch (IOException ex) {
@@ -171,34 +192,6 @@ public class ClientGomoku extends Applet implements Runnable {
                         doMove(x, y, turn);
                         
                         
-                        /* if the game is over */
-                        /*if( endGame(cell_x, cell_y) ){
-                            System.out.println("a");
-                            //Menentukan siapa pemenang
-                            if (turn == GameBoard.RED){
-                                display("Red wins!");}
-                            else if (turn == GameBoard.YELLOW){
-                                display("Yellow wins!");}
-                            else if (turn == GameBoard.GREEN){
-                                display("Green wins!");}
-                            else if (turn == GameBoard.BLUE){
-                                display("Blue wins!");}
-                            else if (turn == GameBoard.BLACK){
-                                display("Black wins!");}
-                            else if (turn == GameBoard.GRAY){
-                                display("Gray wins!");}
-                            else if (turn == GameBoard.PINK){
-                                display("Pink wins!");}
-                            else if (turn == GameBoard.MAGENTA){
-                                display("Magenta wins!");}
-                            
-                            //Permainan selesai
-                            stop();
-                            /*
-                            * At this point there really should be someway
-                            * to restart the game, but that's not
-                            * currently implemented.
-                            */
                         /*}else
                         {
                             display("game is unfinished");
@@ -268,54 +261,7 @@ public class ClientGomoku extends Applet implements Runnable {
 	theBoard.addPiece( x,y,color );
     }
 
-    /* check if the game is over */
-    public boolean endGame(int x, int y)
-    {
-	int count, color;
-	int tx, ty;
-
-	// See whether the move just made at x,y has won.
-	// We need to see if we now have five-in-a-row.
-	color = theBoard.pieceAt(x,y);
-
-	// check horizontal first
-	tx = x; ty = y;
-	while ((tx>0) && (theBoard.pieceAt(tx-1,ty)==color))
-		tx--;
-	count = 1;
-	while ((tx < theBoard.cols-1) && (theBoard.pieceAt(tx+1,ty)==color))
-	{
-		count++;
-		tx++;
-	}
-	//display("horiz count="+count);
-	if (count >= 5)
-		return true;
-
-	// then do the three counts with vertical components
-	for (int dx = -1; dx <= 1; dx++)
-	{
-		tx = x; ty = y;
-		while ((ty>0) && ((tx-dx)>=0) && ((tx-dx)<theBoard.cols)
-				&& (theBoard.pieceAt(tx-dx,ty-1)==color))
-		{
-			tx-=dx;
-			ty--;
-		}
-		count = 1;
-		while ((ty<theBoard.rows-1) && ((tx+dx)>=0) && ((tx+dx)<theBoard.cols)
-				&& (theBoard.pieceAt(tx+dx,ty+1)==color))
-		{
-			count++;
-			tx+=dx;
-			ty++;
-		}
-		//display("count (dx="+dx+")="+count);
-		if (count >= 5)
-			return true;
-	}
-	return false;
-    }
+    
 
     /* display a string in the TextArea */
     public void display(String str)

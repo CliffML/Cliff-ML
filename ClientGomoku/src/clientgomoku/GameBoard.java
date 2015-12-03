@@ -31,7 +31,7 @@ public int pieceWidth, pieceHeight;
 public int rows, cols;  // number of rows/columns
 int board[][]; // the actual board itself
 
-	GameBoard( int w, int h, int player) {
+	public GameBoard( int w, int h, int player) {
 		board = new int[w][h];
                 numOfPlayer=player;
 		cols = w;
