@@ -9,7 +9,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.lang.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.Level;
@@ -59,6 +58,48 @@ public class ServerGomoku {
                 System.out.println("Created user " + users.get(users.size()-1).getNick());
                 //write("clientNo "+Integer.toString(users.size()-1)); //assign clientNo
                 //System.out.println("clientNo "+Integer.toString(users.size()-1));
+            }
+            else if (command.compareToIgnoreCase("getroomname") == 0) {
+                int i = Integer.parseInt(s.next());
+                write(roomList.get(i).getName());
+                System.out.println("Created user " + users.get(users.size()-1).getNick());
+                //write("clientNo "+Integer.toString(users.size()-1)); //assign clientNo
+                //System.out.println("clientNo "+Integer.toString(users.size()-1));
+            }
+            else if (command.compareToIgnoreCase("startgame") == 0) {
+                int id = clientNo;
+                int i;
+                User user = null;
+                i = 0;
+                while (i < users.size() && id != users.get(i).getUserID())
+                    i++;
+                user = users.get(i);
+                i = 0;
+                while (i < roomList.size() && !roomList.get(i).getUsers().contains(user)) {
+                    i++;
+                }
+                sendToSpecific("canMove", roomList.get(i).getUsers().get(0).getUserID());
+            }
+            else if (command.compareToIgnoreCase("move") == 0) {
+                int x = Integer.parseInt(s.next());
+                int y = Integer.parseInt(s.next());
+                int id = clientNo;
+                int i;
+                User user = null;
+                i = 0;
+                while (i < users.size() && id != users.get(i).getUserID())
+                    i++;
+                user = users.get(i);
+                i = 0;
+                while (i < roomList.size() && !roomList.get(i).getUsers().contains(user)) {
+                    i++;
+                }
+                String str = Integer.toString(x) + " " + Integer.toString(y) + " " + Integer.toString(roomList.get(i).getUsers().indexOf(user));
+                sendToAll(str);
+                int nextTurn = (roomList.get(i).getUsers().indexOf(user) + 1)%roomList.get(i).getNUser();
+                System.out.println(nextTurn);
+                System.out.println("UserID : " + roomList.get(i).getUsers().get(nextTurn).getUserID());
+                sendToSpecific("canMove", roomList.get(i).getUsers().get(nextTurn).getUserID());
             }
             else if (command.compareToIgnoreCase("chat") == 0) {
                 String msg;
@@ -118,6 +159,7 @@ public class ServerGomoku {
     private static class Room {
         private ArrayList<User> userList = new ArrayList<>();
         private String name;
+        private int roomID;
         
         public Room(String name) {
             this.name = name;
