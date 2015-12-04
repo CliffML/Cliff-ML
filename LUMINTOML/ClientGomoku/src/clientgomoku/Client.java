@@ -97,6 +97,7 @@ public class Client extends Applet implements ActionListener
                     public void actionPerformed(ActionEvent e) {
                         Button source = (Button)e.getSource();
                             out.println("chat "+textChat.getText());
+                            textChat.setText("");
                     }
                 });
                 inputPanel = new Panel();
@@ -123,8 +124,7 @@ public class Client extends Applet implements ActionListener
                             while (nPlayer < 3) {
                                 while ((inLine = in.readLine()) == null) {}
                                 if (inLine.contains("chat")) {
-                                    out.println("chat "+inLine.substring(5));
-                                    display(in.readLine().substring(5));
+                                    display(inLine.substring(5));
                                 }
                                 else if (inLine.contains("joined")) {
                                     nPlayer++;
@@ -189,7 +189,9 @@ public class Client extends Applet implements ActionListener
                         try {
                             System.out.println("asfd");
                             while ((input = in.readLine()) == null) {}
-                                startButton.setEnabled(false);
+                                if (!input.contains("joined")) {
+                                    startButton.setEnabled(false);
+                                }
                                 System.out.println(input);
                                 if (input.equals("canMove")) {
                                     canMove = true;
@@ -220,6 +222,12 @@ public class Client extends Applet implements ActionListener
                                 }
                                 else if (input.contains("joined")) {
                                     
+                                }
+                                else if (input.contains("chat")) {
+                                    s = new Scanner(input);
+                                    String temp = s.next();
+                                    temp = s.nextLine();
+                                    display(temp);
                                 }
                                 else {
                                     s = new Scanner(input);
