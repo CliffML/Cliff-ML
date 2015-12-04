@@ -112,7 +112,10 @@ public class ServerGomoku {
                     roomList.get(roomID).addUser(user);
                     write("success");
                     System.out.println("User " + user.getNick() + " joined room #" + roomID);
-                    sendToAll("joined");
+                    int j;
+                    for (j=0;j<roomList.get(roomID).getNUser();j++) {
+                        sendToSpecific("joined", roomList.get(roomID).getUsers().get(j).getUserID());
+                    }
                 }
                 else
                 {
@@ -174,8 +177,9 @@ public class ServerGomoku {
                 }
                 
                 sendToSpecific("canMove", roomList.get(i).getUsers().get(0).getUserID());
-                
-                sendToAll("turn " + roomList.get(i).getUsers().get(0).getNick());
+                for (int j=0;j<roomList.get(i).getNUser();j++) {
+                    sendToSpecific("turn " + roomList.get(i).getUsers().get(0).getNick(), roomList.get(i).getUsers().get(j).getUserID());
+                }
             }
             else if (command.compareToIgnoreCase("move") == 0) {
                 int x = Integer.parseInt(s.next());
@@ -192,19 +196,25 @@ public class ServerGomoku {
                     i++;
                 }
                 String str = Integer.toString(x) + " " + Integer.toString(y) + " " + Integer.toString(roomList.get(i).getUsers().indexOf(user));
-                sendToAll(str);
+                for (int j=0;j<roomList.get(i).getNUser();j++) {
+                    sendToSpecific(str, roomList.get(i).getUsers().get(j).getUserID());
+                }
                 theBoard.addPiece(x, y, roomList.get(i).getUsers().indexOf(user) + 1);
                 int nextTurn = (roomList.get(i).getUsers().indexOf(user) + 1)%roomList.get(i).getNUser();
                 if (endGame(x, y)) {
                     //Menentukan siapa pemenang
                     write("win");
-                    sendToAll("winner " + user.getNick());
+                    for (int j=0;j<roomList.get(i).getNUser();j++) {
+                        sendToSpecific("winner " + user.getNick(), roomList.get(i).getUsers().get(j).getUserID());
+                    }
                 }
                 else {
                     //System.out.println(nextTurn);
                     //System.out.println("UserID : " + roomList.get(i).getUsers().get(nextTurn).getUserID());
                     sendToSpecific("canMove", roomList.get(i).getUsers().get(nextTurn).getUserID());
-                    sendToAll("turn " + roomList.get(i).getUsers().get(nextTurn).getNick());
+                    for (int j=0;j<roomList.get(i).getNUser();j++) {
+                        sendToSpecific("turn " + roomList.get(i).getUsers().get(nextTurn).getNick(), roomList.get(i).getUsers().get(j).getUserID());
+                    }
                 }
             }
             else if (command.compareToIgnoreCase("chat") == 0) {

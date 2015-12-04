@@ -204,6 +204,9 @@ public class Client extends Applet implements ActionListener
                                     temp = s.next();
                                     display("Giliran " + temp);
                                 }
+                                else if (input.contains("joined")) {
+                                    
+                                }
                                 else {
                                     s = new Scanner(input);
                                     int x = s.nextInt();
