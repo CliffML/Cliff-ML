@@ -122,5 +122,7 @@ int board[][]; // the actual board itself
 		if( x> cols || x<0 || y>rows || y<0) return ;
 		board[x][y] = color;
 	}
+        
+        
 
 }

@@ -4,10 +4,13 @@ import java.awt.*;
 import java.applet.*;
 import java.awt.event.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,7 +33,6 @@ public class Client extends Applet implements ActionListener
         Label label4;
         Label label5;
         
-        
     class Gomoku extends Applet implements Runnable {
         /* the Game stuff */
         GameBoard theBoard;
@@ -43,12 +45,15 @@ public class Client extends Applet implements ActionListener
         TextField textChat;
         Panel inputPanel;
         Panel topPanel;
+        Panel centerPanel;
         Label labelName;
+        Label labelName1;
         /* the Thread */
         Thread kicker;
         Button startButton;
+        Button disconnectButton;
         Button chatButton;
-
+        Button confirmButton;
         Scanner s;
 
         boolean canMove = false;
@@ -74,11 +79,17 @@ public class Client extends Applet implements ActionListener
                         out.println("startgame");
                     }
                 });
-                
+                disconnectButton = new Button("Disconnect");
+                disconnectButton.addActionListener(new ActionListener(){
+                    public void actionPerformed(ActionEvent e){
+                        System.exit(0);
+                    }
+                });
                 topPanel = new Panel();
                 topPanel.setLayout( new BorderLayout() );
-                topPanel.add("Center",labelName);
-                topPanel.add("East", startButton);
+                topPanel.add("West",labelName);
+                topPanel.add("Center", startButton);
+                topPanel.add("East",disconnectButton);
                 add("North", topPanel);
                 
                 chatButton = new Button("Send");
@@ -95,7 +106,6 @@ public class Client extends Applet implements ActionListener
                 inputPanel.add("East", chatButton);
                 
                 add("South", inputPanel);
-                
                 
                 Thread waitPlayers = new Thread() {
                     public void run() {
@@ -190,6 +200,10 @@ public class Client extends Applet implements ActionListener
                                 else if (input.equals("win")) {
                                     display("Anda menang");
                                     stop();
+                                    remove(startButton);
+                                    labelName1.setText("Anda menang");
+                                    inputPanel.add("Center", labelName1);
+                                    disconnectButton = new Button("Home");
                                 }
                                 else if (input.contains("winner")) {
                                     s = new Scanner(input);
@@ -428,6 +442,26 @@ public class Client extends Applet implements ActionListener
             } catch (IOException ex) {
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             }
+    }
+    
+    public void restartApplication() throws URISyntaxException, IOException
+    {
+        final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+        final File currentJar = new File(Client.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+
+        /* is it a jar file? */
+        if(!currentJar.getName().endsWith(".jar"))
+          return;
+
+        /* Build command: java -jar application.jar */
+        final ArrayList<String> command = new ArrayList<String>();
+        command.add(javaBin);
+        command.add("-jar");
+        command.add(currentJar.getPath());
+
+        final ProcessBuilder builder = new ProcessBuilder(command);
+        builder.start();
+        System.exit(0);
     }
 } 
 
