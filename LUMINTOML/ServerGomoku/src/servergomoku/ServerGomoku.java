@@ -156,7 +156,7 @@ public class ServerGomoku {
             else if (command.compareToIgnoreCase("getusers") == 0) {
                 int i = Integer.parseInt(s.next());
                 write(roomList.get(i).getName());
-                System.out.println("Created user " + users.get(users.size()-1).getNick());
+                //System.out.println("Created user " + users.get(users.size()-1).getNick());
                 //write("clientNo "+Integer.toString(users.size()-1)); //assign clientNo
                 //System.out.println("clientNo "+Integer.toString(users.size()-1));
             }
@@ -172,8 +172,10 @@ public class ServerGomoku {
                 while (i < roomList.size() && !roomList.get(i).getUsers().contains(user)) {
                     i++;
                 }
+                
                 sendToSpecific("canMove", roomList.get(i).getUsers().get(0).getUserID());
-                sendToAll("turn " + roomList.get(i).getUsers().get((roomList.get(i).getUsers().indexOf(user) + 1)%roomList.get(i).getNUser()).getNick());
+                
+                sendToAll("turn " + roomList.get(i).getUsers().get(0).getNick());
             }
             else if (command.compareToIgnoreCase("move") == 0) {
                 int x = Integer.parseInt(s.next());

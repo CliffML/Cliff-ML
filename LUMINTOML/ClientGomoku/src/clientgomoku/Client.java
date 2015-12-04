@@ -52,7 +52,7 @@ public class Client extends Applet implements ActionListener
         Scanner s;
 
         boolean canMove = false;
-
+        volatile int nPlayer = 0;
         
         
         
@@ -71,8 +71,7 @@ public class Client extends Applet implements ActionListener
                 startButton.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         Button source = (Button)e.getSource();
-                            out.println("startgame");
-                        source.setEnabled(false);
+                        out.println("startgame");
                     }
                 });
                 
@@ -109,7 +108,7 @@ public class Client extends Applet implements ActionListener
                                 inLine = in.readLine();
                                 System.out.println(inLine);
                             }
-                            int nPlayer = 0;
+                            
                             nPlayer = Integer.parseInt(inLine);
                             while (nPlayer < 3) {
                                 while ((inLine = in.readLine()) == null) {}
@@ -120,7 +119,10 @@ public class Client extends Applet implements ActionListener
                                 else if (inLine.contains("joined")) {
                                     nPlayer++;
                                 }
+                                System.out.println("HAHAHAHA "+nPlayer);
                             }
+                            System.out.println("nplayer = "+nPlayer);
+                            System.out.println("inLinenya = "+inLine);
                             startButton.setEnabled(true);
                         } catch (IOException ex) {
                             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
@@ -132,6 +134,7 @@ public class Client extends Applet implements ActionListener
                             addMouseListener(new mseL());
                             resize(600, 600);
                 initBoard();
+                
                             /*} catch (IOException ex) {
                             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                             }*/
@@ -160,6 +163,8 @@ public class Client extends Applet implements ActionListener
         public void run()
         {
             String input;
+            while (nPlayer < 3) {} // wait until nPlayer > 3
+            
             /* here is the main event loop */
             while( kicker != null)
             {
@@ -174,7 +179,8 @@ public class Client extends Applet implements ActionListener
                         try {
                             System.out.println("asfd");
                             while ((input = in.readLine()) == null) {}
-                                //System.out.println(input);
+                                startButton.setEnabled(false);
+                                System.out.println(input);
                                 if (input.equals("canMove")) {
                                     canMove = true;
                                     System.out.println("true canmove");
@@ -382,11 +388,19 @@ public class Client extends Applet implements ActionListener
                     else {
                         System.out.println(nickname);
                         out.println("create_user "+nickname);
-                        in.readLine();
+                        String response = in.readLine();
+                        /*while (!response.contains("create_user")) {
+                            response = in.readLine();
+                        }*/
                         roomID = Integer.parseInt(nameField3.getText());
                         out.println("join_room "+roomID);
                         System.out.println(roomID);
-                        String response = in.readLine();
+                        response = in.readLine();
+                        System.out.println(response);
+                        /*while (!response.contains("success") || !response.contains("failed")) {
+                            response = in.readLine();
+                        }*/
+                        
                         if (response.equals("success")) {
                             remove(okButton);
                             remove(okButton2);
