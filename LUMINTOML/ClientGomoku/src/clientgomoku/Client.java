@@ -172,7 +172,7 @@ public class Client extends Applet implements ActionListener
         /* the main Thread loop */
         public void run()
         {
-            String input;
+            String input = null;
             while (nPlayer < 3) {} // wait until nPlayer > 3
             
             /* here is the main event loop */
@@ -189,14 +189,12 @@ public class Client extends Applet implements ActionListener
                         try {
                             System.out.println("asfd");
                             while ((input = in.readLine()) == null) {}
-                                if (!input.contains("joined")) {
-                                    startButton.setEnabled(false);
-                                }
                                 System.out.println(input);
                                 if (input.equals("canMove")) {
                                     canMove = true;
                                     System.out.println("true canmove");
                                     display("Giliran Anda");
+                                    startButton.setEnabled(false);
                                     input = in.readLine();
                                 }
                                 else if (input.equals("win")) {
@@ -215,6 +213,7 @@ public class Client extends Applet implements ActionListener
                                     stop();
                                 }
                                 else if (input.contains("turn")) {
+                                    startButton.setEnabled(false);
                                     s = new Scanner(input);
                                     String temp = s.next();
                                     temp = s.next();
@@ -242,7 +241,30 @@ public class Client extends Applet implements ActionListener
                             Logger.getLogger(ClientGomoku.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
-
+                    Thread chatwhilewait = new Thread() {
+                        public void run() {
+                            try {
+                                String input;
+                                for (;;) {
+                                    while ((input = in.readLine()) == null) {}
+                                    if (input.contains("chat")) {
+                                        s = new Scanner(input);
+                                        String temp = s.next();
+                                        temp = s.nextLine();
+                                        display(temp);
+                                    }
+                                    else {
+                                        this.interrupt();
+                                        break;
+                                    }
+                                }
+                            } catch (IOException ex) {
+                                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                                
+                        }
+                    };
+                    chatwhilewait.start();
                     while( got_move == false)
                     {
                             try {
@@ -250,7 +272,7 @@ public class Client extends Applet implements ActionListener
                             } catch (Exception e) {}
                     }
                     //System.out.println("Got: "+cell_x+","+cell_y);
-
+                    out.println("request");
                     if (validMove(cell_x, cell_y))
                     {
                         try {

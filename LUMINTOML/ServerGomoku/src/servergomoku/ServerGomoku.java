@@ -181,6 +181,9 @@ public class ServerGomoku {
                     sendToSpecific("turn " + roomList.get(i).getUsers().get(0).getNick(), roomList.get(i).getUsers().get(j).getUserID());
                 }
             }
+            else if (command.compareToIgnoreCase("request") == 0) {
+                write("response");
+            }
             else if (command.compareToIgnoreCase("move") == 0) {
                 int x = Integer.parseInt(s.next());
                 int y = Integer.parseInt(s.next());
